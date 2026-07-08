@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "WebHook.AppHost/WebHook.AppHost.csproj"
+  }
+}

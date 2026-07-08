@@ -1,3 +1,7 @@
 <Solution>
+  <Folder Name="/Aspire/">
+    <Project Path="WebHook.AppHost/WebHook.AppHost.csproj" />
+    <Project Path="WebHook.ServiceDefaults/WebHook.ServiceDefaults.csproj" />
+  </Folder>
   <Project Path="WebHook/WebHook.csproj" />
 </Solution>
