@@ -1,40 +1,74 @@
-﻿using WebHook.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using WebHook.Data;
+using WebHook.Models;
 
 namespace WebHook.Services;
 
-internal sealed class WebhookDispatcher
+internal sealed class WebhookDispatcher(
+    IHttpClientFactory httpClientFactory,
+    WebhooksDbContext dbContext)
 {
-    private readonly HttpClient _httpClient;
-    private readonly InMemoryWebhookSubscriptionRepository _subscriptionRepository;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly WebhooksDbContext _dbContext = dbContext;
 
-    public WebhookDispatcher(
-        HttpClient httpClient,
-        InMemoryWebhookSubscriptionRepository subscriptionRepository)
-    {
-        _httpClient = httpClient;
-        _subscriptionRepository = subscriptionRepository;
-    }
-
-    public async Task DispatchAsync(string eventType, object payload)
+    public async Task DispatchAsync<T>(string eventType, T data)
     {
         // 1. Находим все подписки на данный тип события
-        var subscriptions = _subscriptionRepository.GetByEventType(eventType);
+        var subscriptions = await _dbContext.WebhookSubscriptions
+            .AsNoTracking()
+            .Where(s => s.EventType == eventType)
+            .ToListAsync();
 
         // 2. Рассылаем запросы всем подписчикам
-        foreach (var subscription in subscriptions)
+        foreach (WebhookSubscription webhookSebscription in subscriptions)
         {
+            using var httpClient = _httpClientFactory.CreateClient();
+
             // Формируем стандартную обертку (Envelope) для вебхука
-            var webhookPayload = new
-            {
-                Id = Guid.NewGuid(),
-                EventType = subscription.EventType,
-                SubscriptionId = subscription.Id,
-                Timestamp = DateTime.UtcNow,
-                Data = payload // Сами полезные данные (например, заказ)
-            };
+            var payload = new WebhookPayload<T>(
+                Guid.NewGuid(),
+                webhookSebscription.EventType,
+                webhookSebscription.Id,
+                DateTime.UtcNow,
+                data // Сами полезные данные (например, заказ)
+            );
+
+            var jsonPayload = System.Text.Json.JsonSerializer.Serialize(payload);
 
             // Отправляем асинхронный POST-запрос
-            await _httpClient.PostAsJsonAsync(subscription.WebhookUrl, webhookPayload);
+            try
+            {
+                HttpResponseMessage response = await httpClient.PostAsJsonAsync(webhookSebscription.WebhookUrl, payload);
+
+                var attempt = new WebhookDeliveryAttempt
+                {
+                    Id = Guid.NewGuid(),
+                    WebhookSubscriptionId = webhookSebscription.Id,
+                    Payload = jsonPayload,
+                    ResponseStatusCode = (int)response.StatusCode,
+                    Success = response.IsSuccessStatusCode,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                _dbContext.WebhookDeliveryAttempts.Add(attempt);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var attempt = new WebhookDeliveryAttempt
+                {
+                    Id = Guid.NewGuid(),
+                    WebhookSubscriptionId = webhookSebscription.Id,
+                    Payload = jsonPayload,
+                    ResponseStatusCode = null,
+                    Success = false,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                _dbContext.WebhookDeliveryAttempts.Add(attempt);
+                await _dbContext.SaveChangesAsync();
+            }
+
         }
     }
 }

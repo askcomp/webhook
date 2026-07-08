@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>4b3b358f-85b5-4311-84fa-4f2cd7ca179d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.4.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WebHook\WebHook.csproj" />
+  </ItemGroup>
+
+</Project>
