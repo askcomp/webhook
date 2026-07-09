@@ -9,7 +9,7 @@ POST {{Webhooks.Api_HostAddress}}/orders
 Content-Type: application/json
 {
   "customerName": "Alex",
-  "amount": 123
+  "amount": 12345
 }
 
 ### Create subscription

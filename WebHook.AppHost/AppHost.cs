@@ -5,8 +5,14 @@ IResourceBuilder<PostgresDatabaseResource> database = builder.AddPostgres("postg
     .WithPgAdmin()
     .AddDatabase("webhooks");
 
+IResourceBuilder<RabbitMQServerResource> queue = builder.AddRabbitMQ("rabbitmq")
+    .WithDataVolume()
+    .WithManagementPlugin();
+
 builder.AddProject<Projects.WebHook>("webhook")
     .WithReference(database)
-    .WaitFor(database);
+    .WithReference(queue)
+    .WaitFor(database)
+    .WaitFor(queue);
 
 builder.Build().Run();
