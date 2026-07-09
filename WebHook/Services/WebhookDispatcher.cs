@@ -1,10 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using System.Threading.Channels;
 using WebHook.Data;
 using WebHook.Models;
+using WebHook.OpenTelemetry;
 
 namespace WebHook.Services;
 
 internal sealed class WebhookDispatcher(
+    Channel<WebhookDispatch> webhookChannel,
     IHttpClientFactory httpClientFactory,
     WebhooksDbContext dbContext)
 {
@@ -12,6 +16,14 @@ internal sealed class WebhookDispatcher(
     private readonly WebhooksDbContext _dbContext = dbContext;
 
     public async Task DispatchAsync<T>(string eventType, T data)
+        where T : notnull
+    {
+        using Activity? activity = DiagnosticConfig.Source.StartActivity($"{eventType} dispatch webhook");
+        activity?.AddTag("event.type", eventType);
+        await webhookChannel.Writer.WriteAsync(new WebhookDispatch(eventType, data, activity?.Id));
+    }
+
+    public async Task ProcessAsync<T>(string eventType, T data)
     {
         // 1. Находим все подписки на данный тип события
         var subscriptions = await _dbContext.WebhookSubscriptions

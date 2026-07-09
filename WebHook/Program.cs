@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Channels;
 using WebHook.Data;
 using WebHook.Extentions;
 using WebHook.Models;
+using WebHook.OpenTelemetry;
 using WebHook.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +22,20 @@ builder.Services.AddScoped<WebhookDispatcher>();
 
 builder.Services.AddDbContext<WebhooksDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("webhooks")));
+
+builder.Services.AddHostedService<WebhookProcessor>();
+
+
+builder.Services.AddSingleton(_ =>
+{
+    return Channel.CreateBounded<WebhookDispatch>(new BoundedChannelOptions(100)
+    {
+        FullMode = BoundedChannelFullMode.Wait,
+    });
+});
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing.AddSource(DiagnosticConfig.Source.Name));
 
 var app = builder.Build();
 
@@ -66,6 +82,7 @@ app.MapPost("/orders", async (
 {
     var order = new Order(Guid.NewGuid(), request.CustomerName, request.Amount, DateTime.UtcNow);
     context.Orders.Add(order);
+    await context.SaveChangesAsync();
 
     // Триггерим вебхук для всех, кто подписан на событие "orderCreated"
     await webhookDispatcher.DispatchAsync("order.created", order);
