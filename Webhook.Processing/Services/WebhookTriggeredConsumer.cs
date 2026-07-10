@@ -1,14 +1,12 @@
 ﻿using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using WebHook.Data;
-using WebHook.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Webhook.Processing.Data;
+using Webhook.Processing.Models;
 
-namespace WebHook.Services;
+namespace Webhook.Processing.Services;
 
 internal sealed class WebhookTriggeredConsumer(
     IHttpClientFactory httpClientFactory,
-    WebhooksDbContext dbContext) 
+    WebhooksDbContext dbContext)
     : IConsumer<WebhookTriggered>
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;

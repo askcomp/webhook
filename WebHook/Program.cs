@@ -12,8 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 //builder.Services.AddSingleton<InMemoryOrderRepository>();
@@ -40,8 +38,8 @@ builder.Services.AddMassTransit(busConfig =>
 { 
     busConfig.SetKebabCaseEndpointNameFormatter();
 
-    busConfig.AddConsumer<WebhookDispatchedConsumer>();
-    busConfig.AddConsumer<WebhookTriggeredConsumer>();
+    //busConfig.AddConsumer<WebhookDispatchedConsumer>();
+    //busConfig.AddConsumer<WebhookTriggeredConsumer>();
 
     busConfig.UsingRabbitMq((context, cfg) =>
     {
@@ -70,7 +68,7 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "Open API v1");
     });
 
-    app.ApplyMigrations();
+    await app.ApplyMigrations();
 
 }
 

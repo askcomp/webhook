@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WebHook.Contracts\WebHook.Contracts.csproj" />
     <ProjectReference Include="..\WebHook.ServiceDefaults\WebHook.ServiceDefaults.csproj" />
   </ItemGroup>
 

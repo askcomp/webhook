@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using System.Diagnostics;
+using WebHook.Contracts;
 using WebHook.OpenTelemetry;
 
 namespace WebHook.Services;

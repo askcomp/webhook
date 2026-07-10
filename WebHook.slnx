@@ -3,5 +3,7 @@
     <Project Path="WebHook.AppHost/WebHook.AppHost.csproj" />
     <Project Path="WebHook.ServiceDefaults/WebHook.ServiceDefaults.csproj" />
   </Folder>
+  <Project Path="WebHook.Contracts/WebHook.Contracts.csproj" />
+  <Project Path="Webhook.Processing/Webhook.Processing.csproj" />
   <Project Path="WebHook/WebHook.csproj" />
 </Solution>

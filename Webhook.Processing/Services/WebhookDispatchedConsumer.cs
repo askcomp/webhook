@@ -1,8 +1,9 @@
 ﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using WebHook.Data;
+using Webhook.Processing.Data;
+using WebHook.Contracts;
 
-namespace WebHook.Services;
+namespace Webhook.Processing.Services;
 
 public sealed record WebhookTriggered(
     Guid SubscriptionId,
